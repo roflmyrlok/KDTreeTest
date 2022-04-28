@@ -3,10 +3,10 @@ namespace ConsoleApp2;
 public class csvreader
 {
 	public List<point> listA { get; set; }
-	public csvreader()
+	public csvreader(String db)
 	{
 		listA = new List<point>();
-		StreamReader reader = new StreamReader(@"ukraine_poi.csv");
+		StreamReader reader = new StreamReader(@db);
 		while (!reader.EndOfStream)
 		{
 			

@@ -5,10 +5,15 @@ Main(args);
 
 static void Main(string[] args)
 {
-    Console.WriteLine(args);
-    var roadmap = new csvreader();
+    var db = args[1].Substring(args[1].LastIndexOf('=') + 1);
+    var latitude = Convert.ToDouble(args[2].Substring(args[2].LastIndexOf('=') + 1));
+    var longtitude = Convert.ToDouble(args[3].Substring(args[3].LastIndexOf('=') + 1));
+    var size = Convert.ToDouble(args[4].Substring(args[4].LastIndexOf('=') + 1));
+    //Console.WriteLine(lat);
+    Console.WriteLine(latitude);
+    var roadmap = new csvreader(db);
     var points = roadmap.listA;
-    findPointsInRange(49.84349575846739, 24.007813130763882, 300);
+    findPointsInRange(latitude, longtitude, size);
 
     void findPointsInRange(double x, double y, double range)
     {
