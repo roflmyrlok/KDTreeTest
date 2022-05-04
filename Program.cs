@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 using ConsoleApp2;
 
 Main(args);
@@ -9,35 +10,60 @@ static void Main(string[] args)
     var latitude = Convert.ToDouble(args[2].Substring(args[2].LastIndexOf('=') + 1));
     var longtitude = Convert.ToDouble(args[3].Substring(args[3].LastIndexOf('=') + 1));
     var size = Convert.ToDouble(args[4].Substring(args[4].LastIndexOf('=') + 1));
-    //Console.WriteLine(lat);
-    Console.WriteLine(latitude);
     var roadmap = new csvreader(db);
     var points = roadmap.listA;
-    findPointsInRange(latitude, longtitude, size);
-
-    void findPointsInRange(double x, double y, double range)
+    var currentKdTree = kdTree(points.ToArray(),0);
+    // findPointsInRange(latitude, longtitude, size, currentKdTree);
+    
+    Point kdTree(Point[] valueList,int depth)
     {
-        var newCentre = new point
+        if (valueList.Length == 1)
         {
-            lat = x,
-            lon = y
-        };
-        var a = allInRange(newCentre, range);
-        readFromPointsList(a);
+            valueList[0].left = null;
+            valueList[0].right = null;
+            valueList[0].depthOfTree = depth++;
+            return valueList[0];
+        }
+
+        if (valueList.Length == 0)
+        {
+            return null;
+        }
+
+        var depthOfTree = depth + 1;
+        var w8 = valueList;
+        if (depthOfTree % 2 == 0)
+        {
+            Array.Sort(w8, new LatComparer());
+        }
+        else
+        {
+            Array.Sort(w8, new LonComparer());
+        }
+        
+        var middle = w8.Length / 2;
+        if (middle == 0)
+        {
+            return w8[0];
+        }
+        var left = w8[..(middle)];
+        var right = w8[(middle + 1)..];
+        var curr = w8[middle];
+        curr.depthOfTree = depthOfTree;
+        curr.right = kdTree(right, depthOfTree);
+        curr.left = kdTree(left, depthOfTree);
+        return curr;
     }
 
-    List<point> allInRange(point centre, double range)
+    
+    
+    bool Haversine(Point current, Point centre, double range)
     {
-        var k = 1;
-        var sw = new Stopwatch();
-        sw.Start();
-        var localPointsList = points.Where(curr => Haversine(curr, centre, range)).ToList();
-        sw.Stop();
-        Console.WriteLine($"Elapsed time: {sw.Elapsed}");
-        return localPointsList;
+        return distHaversine(current, centre) <= range; 
     }
-
-    bool Haversine(point current, point centre, double range)
+    
+    
+    double distHaversine(Point current, Point centre)
     {
         double radius = 6371000;
         double convertor = Math.PI / 180;
@@ -49,10 +75,10 @@ static void Main(string[] args)
                    + Math.Cos(latCentre) * Math.Cos(latCurr) * Math.Sin(lonCurrSubLonCentre / 2)
                    * Math.Sin(lonCurrSubLonCentre / 2);
         double d = radius * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        return d <= range;
+        return d;
     }
 
-    void readFromPointsList(List<point> newList)
+    void readFromPointsList(List<Point> newList)
     {
         var i = 1;
         Console.WriteLine("Next points were found in given area:");
@@ -71,5 +97,24 @@ static void Main(string[] args)
 
             i++;
         }
+    }
+    
+}
+
+public class LatComparer : IComparer
+{
+    public int Compare(object x, object y)
+    {
+        return(new CaseInsensitiveComparer()).Compare(((Point)x).lat,
+            ((Point)y).lat);
+    }
+}
+
+class LonComparer : IComparer
+{
+    public int Compare(object x, object y)
+    {
+        return(new CaseInsensitiveComparer()).Compare(((Point)x).lon,
+            ((Point)y).lon);
     }
 }

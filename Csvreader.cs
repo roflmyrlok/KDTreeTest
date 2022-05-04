@@ -2,10 +2,10 @@ namespace ConsoleApp2;
 
 public class csvreader
 {
-	public List<point> listA { get; set; }
+	public List<Point> listA { get; set; }
 	public csvreader(String db)
 	{
-		listA = new List<point>();
+		listA = new List<Point>();
 		StreamReader reader = new StreamReader(@db);
 		while (!reader.EndOfStream)
 		{
@@ -17,7 +17,7 @@ public class csvreader
 			latL = latL.Replace(',','.');
 			var lonL = values[1];
 			lonL = lonL.Replace(',','.');
-			var newPoint = new point()
+			var newPoint = new Point()
 			{
 				lat = Convert.ToDouble(latL),
 				lon = Convert.ToDouble(lonL),
