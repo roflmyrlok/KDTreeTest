@@ -4,6 +4,8 @@ public class Point
 {
 	public double lon { get; set; }
 	public double lat { get; set; }
+	public double leftBorder { get; set; }
+	public double rightBorder { get; set; }
 	
 	public Point left { get; set; }
 	

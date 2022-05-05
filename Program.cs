@@ -13,7 +13,16 @@ static void Main(string[] args)
     var roadmap = new csvreader(db);
     var points = roadmap.listA;
     var currentKdTree = kdTree(points.ToArray(),0);
-    // findPointsInRange(latitude, longtitude, size, currentKdTree);
+    
+    
+    var newCentre = new Point
+    {
+        lat = latitude,
+        lon = longtitude
+    };
+
+    readFromPointsList(allInRange(newCentre, size, points));
+    findPointsInRange(latitude, longtitude, size, currentKdTree);
     
     Point kdTree(Point[] valueList,int depth)
     {
@@ -46,16 +55,107 @@ static void Main(string[] args)
         {
             return w8[0];
         }
+
+       
         var left = w8[..(middle)];
         var right = w8[(middle + 1)..];
         var curr = w8[middle];
+        if (depthOfTree % 2 == 0)
+        {
+            curr.leftBorder = w8[0].lat;
+            curr.rightBorder = w8[^1].lat;
+        }
+        else
+        {
+            curr.leftBorder = w8[0].lon;
+            curr.rightBorder = w8[^1].lon;
+        }
         curr.depthOfTree = depthOfTree;
         curr.right = kdTree(right, depthOfTree);
         curr.left = kdTree(left, depthOfTree);
         return curr;
     }
 
-    
+    List<Point> kdTreeSearch(Point centre, double range, Point kdTree)
+    {
+        var current = kdTree;
+        var previous = new Point();
+        var treeStack = new Stack<Point>();
+        while (true)
+        {
+            if (current.left == null && current.right == null)
+            {
+                current = treeStack.Pop();
+                continue;
+            }
+            if (current.left == null)
+            {
+                current = current.right;
+                continue;
+            }
+
+            if (current.right == null)
+            {
+                current = current.left;
+                continue;
+            }
+            if (distHaversine(centre,current) <= range)
+            {
+                break;
+            }
+            previous = current;
+            var distToLeft = distHaversine(centre, current.left);
+            var distToRight = distHaversine(centre, current.right);
+            treeStack.Push(distToLeft > distToRight ? current.left : current.right);
+            current = distToLeft < distToRight ? current.left : current.right;
+        
+        }
+
+        var stack = new Stack<Point>();
+        var ListToSearch = new List<Point>();
+        stack.Push(previous);
+        Console.WriteLine(current.lat + " " + current.lon);
+        Console.WriteLine(previous.lat + " " + previous.lon);
+        while (stack.Count > 0)
+        {
+            var curr = stack.Pop();
+            if (curr.left != null)
+            {
+                stack.Push(curr.left);
+            }
+        
+            if (curr.right != null)
+            {
+                stack.Push(curr.right);
+            }
+        
+            ListToSearch.Add(curr);
+        }
+
+        return ListToSearch;
+    }
+
+    void findPointsInRange(double x, double y, double range,Point kdTree)
+    {
+        var newCentre = new Point
+        {
+            lat = x,
+            lon = y
+        };
+        var kdTreeAns = kdTreeSearch(newCentre, range, kdTree);
+        var a = allInRange(newCentre, range, kdTreeAns);
+        readFromPointsList(a);
+    }
+
+    List<Point> allInRange(Point centre, double range, List<Point> points)
+    {
+        var k = 1;
+        var sw = new Stopwatch();
+        sw.Start();
+        var localPointsList = points.Where(curr => Haversine(curr, centre, range)).ToList();
+        sw.Stop();
+        return localPointsList;
+    }
     
     bool Haversine(Point current, Point centre, double range)
     {
